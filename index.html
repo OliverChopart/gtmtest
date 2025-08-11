@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Tøjbutik Sandbox</title>
+    <title>Avanceret GTM Sandbox</title>
 
     <script>
         (function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':
@@ -17,8 +17,12 @@
         .container { max-width: 1200px; margin: auto; padding: 20px; }
         .header { text-align: center; padding: 20px 0; border-bottom: 1px solid #ddd; }
         .header h1 { margin: 0; }
-        .nav { background-color: #333; color: #fff; padding: 10px; text-align: center; }
+        .nav { background-color: #333; color: #fff; padding: 10px; text-align: center; display: flex; justify-content: center; align-items: center; }
         .nav a { color: #fff; text-decoration: none; padding: 0 15px; }
+        .search-bar { margin-left: 20px; }
+        .search-bar input { border: 1px solid #ccc; padding: 5px; border-radius: 4px; }
+        .search-bar button { padding: 5px 10px; background-color: #007bff; color: #fff; border: none; border-radius: 4px; cursor: pointer; }
+        .promotion-banner { background-color: #e9ecef; border: 1px solid #ccc; padding: 15px; text-align: center; margin-bottom: 20px; cursor: pointer; }
         .product-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 20px; margin-top: 20px; }
         .product-card { background: #fff; border: 1px solid #ddd; padding: 15px; text-align: center; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
         .product-card img { max-width: 100%; height: auto; border-radius: 4px; }
@@ -31,6 +35,8 @@
         .product-details-info { overflow: hidden; }
         #cart-view { display: none; }
         .cart-item { display: flex; justify-content: space-between; align-items: center; padding: 10px; border-bottom: 1px solid #eee; }
+        .cart-item .remove-btn { background-color: #dc3545; padding: 5px 10px; }
+        .cart-item .remove-btn:hover { background-color: #c82333; }
         .checkout-container { text-align: right; margin-top: 20px; }
         .purchase-btn { background-color: #28a745; }
         .purchase-btn:hover { background-color: #218838; }
@@ -53,30 +59,51 @@
     <div class="nav">
         <a href="#" onclick="showPage('home-view')">Hjem</a>
         <a href="#" onclick="showPage('cart-view')">Kurv (<span id="cart-count">0</span>)</a>
+        <div class="search-bar">
+            <input type="text" id="search-input" placeholder="Søg efter produkter...">
+            <button onclick="performSearch()">Søg</button>
+        </div>
     </div>
 
     <div class="container">
 
+        <div id="promotion-banner" class="promotion-banner" onclick="trackPromotionClick()">
+            <h3>20% rabat på alle T-shirts!</h3>
+            <p>Klik her for at se tilbuddet.</p>
+        </div>
+
         <div id="home-view">
             <h2>Populære produkter</h2>
-            <div class="product-grid">
+            <div id="product-list" class="product-grid">
                 <div class="product-card" data-id="SKU101" data-name="Blå T-shirt" data-price="149.00" data-category="T-shirts">
                     <img src="https://via.placeholder.com/250x250.png?text=Blå+T-shirt" alt="Blå T-shirt">
                     <h3>Blå T-shirt</h3>
                     <p class="price">149,00 DKK</p>
-                    <button onclick="showProductDetails('SKU101')">Se detaljer</button>
+                    <button class="view-details-btn" onclick="showProductDetails('SKU101')">Se detaljer</button>
                 </div>
                 <div class="product-card" data-id="SKU102" data-name="Grå Hættetrøje" data-price="349.50" data-category="Hoodies">
                     <img src="https://via.placeholder.com/250x250.png?text=Grå+Hættetrøje" alt="Grå Hættetrøje">
                     <h3>Grå Hættetrøje</h3>
                     <p class="price">349,50 DKK</p>
-                    <button onclick="showProductDetails('SKU102')">Se detaljer</button>
+                    <button class="view-details-btn" onclick="showProductDetails('SKU102')">Se detaljer</button>
                 </div>
                 <div class="product-card" data-id="SKU103" data-name="Sorte Jeans" data-price="599.00" data-category="Jeans">
                     <img src="https://via.placeholder.com/250x250.png?text=Sorte+Jeans" alt="Sorte Jeans">
                     <h3>Sorte Jeans</h3>
                     <p class="price">599,00 DKK</p>
-                    <button onclick="showProductDetails('SKU103')">Se detaljer</button>
+                    <button class="view-details-btn" onclick="showProductDetails('SKU103')">Se detaljer</button>
+                </div>
+                <div class="product-card" data-id="SKU104" data-name="Hvid T-shirt" data-price="129.00" data-category="T-shirts">
+                    <img src="https://via.placeholder.com/250x250.png?text=Hvid+T-shirt" alt="Hvid T-shirt">
+                    <h3>Hvid T-shirt</h3>
+                    <p class="price">129,00 DKK</p>
+                    <button class="view-details-btn" onclick="showProductDetails('SKU104')">Se detaljer</button>
+                </div>
+                <div class="product-card" data-id="SKU105" data-name="Sorte Sneakers" data-price="899.00" data-category="Sko">
+                    <img src="https://via.placeholder.com/250x250.png?text=Sorte+Sneakers" alt="Sorte Sneakers">
+                    <h3>Sorte Sneakers</h3>
+                    <p class="price">899,00 DKK</p>
+                    <button class="view-details-btn" onclick="showProductDetails('SKU105')">Se detaljer</button>
                 </div>
             </div>
         </div>
@@ -107,12 +134,14 @@
         const products = {
             'SKU101': { id: 'SKU101', name: 'Blå T-shirt', price: 149.00, category: 'T-shirts' },
             'SKU102': { id: 'SKU102', name: 'Grå Hættetrøje', price: 349.50, category: 'Hoodies' },
-            'SKU103': { id: 'SKU103', name: 'Sorte Jeans', price: 599.00, category: 'Jeans' }
+            'SKU103': { id: 'SKU103', name: 'Sorte Jeans', price: 599.00, category: 'Jeans' },
+            'SKU104': { id: 'SKU104', name: 'Hvid T-shirt', price: 129.00, category: 'T-shirts' },
+            'SKU105': { id: 'SKU105', name: 'Sorte Sneakers', price: 899.00, category: 'Sko' }
         };
         let cart = [];
 
         function showPage(pageId) {
-            document.querySelectorAll('.container > div').forEach(div => div.style.display = 'none');
+            document.querySelectorAll('.container > div:not(.promotion-banner)').forEach(div => div.style.display = 'none');
             document.getElementById(pageId).style.display = 'block';
 
             if (pageId === 'home-view') {
@@ -128,6 +157,34 @@
                     }
                 });
             }
+        }
+
+        function performSearch() {
+            const searchTerm = document.getElementById('search-input').value;
+            if (searchTerm) {
+                dataLayer.push({
+                    'event': 'search',
+                    'ecommerce': {
+                        'search_term': searchTerm
+                    }
+                });
+                alert(`Du søgte efter: "${searchTerm}". Tjek GTM Preview.`);
+            }
+        }
+
+        function trackPromotionClick() {
+            dataLayer.push({
+                'event': 'select_promotion',
+                'ecommerce': {
+                    'promotions': [{
+                        'creative_name': '20pct_tshirts_banner',
+                        'creative_slot': 'banner_top',
+                        'promotion_id': 'PROMO_TSHIRT20',
+                        'promotion_name': '20% rabat på T-shirts'
+                    }]
+                }
+            });
+            alert('Du klikkede på kampagnebanneret. Tjek GTM Preview.');
         }
 
         function showProductDetails(productId) {
@@ -146,7 +203,7 @@
                         <label for="product-quantity">Antal:</label>
                         <input type="number" id="product-quantity" value="1" min="1">
                     </div>
-                    <button onclick="addToCart('${productId}')">Tilføj til kurv</button>
+                    <button id="add-to-cart-btn" onclick="addToCart('${productId}')">Tilføj til kurv</button>
                 </div>
             `;
             showPage('product-details-view');
@@ -165,7 +222,8 @@
         }
 
         function addToCart(productId) {
-            const quantity = parseInt(document.getElementById('product-quantity').value, 10);
+            const quantityInput = document.getElementById('product-quantity');
+            const quantity = parseInt(quantityInput.value, 10);
             if (quantity < 1) {
                 alert('Vælg venligst et gyldigt antal.');
                 return;
@@ -198,6 +256,29 @@
             });
         }
 
+        function removeFromCart(productId) {
+            const itemIndex = cart.findIndex(item => item.id === productId);
+            if (itemIndex > -1) {
+                const removedItem = cart[itemIndex];
+                cart.splice(itemIndex, 1);
+                updateCart();
+
+                dataLayer.push({
+                    'event': 'remove_from_cart',
+                    'ecommerce': {
+                        'items': [{
+                            'item_id': removedItem.id,
+                            'item_name': removedItem.name,
+                            'item_category': removedItem.category,
+                            'price': removedItem.price,
+                            'quantity': removedItem.quantity
+                        }]
+                    }
+                });
+                alert(`${removedItem.name} er fjernet fra kurven.`);
+            }
+        }
+
         function updateCart() {
             const cartItemsContainer = document.getElementById('cart-items');
             const cartTotalSpan = document.getElementById('cart-total');
@@ -216,6 +297,7 @@
                     itemDiv.innerHTML = `
                         <span>${item.name} (${item.quantity})</span>
                         <span>${(item.price * item.quantity).toFixed(2)} DKK</span>
+                        <button class="remove-btn" onclick="removeFromCart('${item.id}')">Fjern</button>
                     `;
                     cartItemsContainer.appendChild(itemDiv);
                     total += item.price * item.quantity;
