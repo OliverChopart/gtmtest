@@ -36,6 +36,9 @@
         .purchase-btn:hover { background-color: #218838; }
         .back-btn { background-color: #6c757d; }
         .back-btn:hover { background-color: #5a6268; }
+        .quantity-selector { margin: 15px 0; }
+        .quantity-selector label { margin-right: 10px; }
+        .quantity-selector input { width: 50px; text-align: center; }
     </style>
 </head>
 <body>
@@ -139,6 +142,10 @@
                     <p><strong>Kategori:</strong> ${product.category}</p>
                     <p class="price"><strong>Pris:</strong> ${product.price.toFixed(2)} DKK</p>
                     <p>Dette er en detaljeret beskrivelse af produktet.</p>
+                    <div class="quantity-selector">
+                        <label for="product-quantity">Antal:</label>
+                        <input type="number" id="product-quantity" value="1" min="1">
+                    </div>
                     <button onclick="addToCart('${productId}')">Tilføj til kurv</button>
                 </div>
             `;
@@ -158,11 +165,24 @@
         }
 
         function addToCart(productId) {
+            const quantity = parseInt(document.getElementById('product-quantity').value, 10);
+            if (quantity < 1) {
+                alert('Vælg venligst et gyldigt antal.');
+                return;
+            }
+            
             const product = products[productId];
             if (!product) return;
-            cart.push(product);
+            
+            const existingItem = cart.find(item => item.id === productId);
+            if (existingItem) {
+                existingItem.quantity += quantity;
+            } else {
+                cart.push({ ...product, quantity: quantity });
+            }
+            
             updateCart();
-            alert(`${product.name} er tilføjet til kurven.`);
+            alert(`${quantity} x ${product.name} er tilføjet til kurven.`);
 
             dataLayer.push({
                 'event': 'add_to_cart',
@@ -172,7 +192,7 @@
                         'item_name': product.name,
                         'item_category': product.category,
                         'price': product.price,
-                        'quantity': 1
+                        'quantity': quantity
                     }]
                 }
             });
@@ -186,6 +206,7 @@
 
             cartItemsContainer.innerHTML = '';
             let total = 0;
+            let totalItems = 0;
 
             if (cart.length > 0) {
                 emptyMessage.style.display = 'none';
@@ -193,18 +214,19 @@
                     const itemDiv = document.createElement('div');
                     itemDiv.className = 'cart-item';
                     itemDiv.innerHTML = `
-                        <span>${item.name}</span>
-                        <span>${item.price.toFixed(2)} DKK</span>
+                        <span>${item.name} (${item.quantity})</span>
+                        <span>${(item.price * item.quantity).toFixed(2)} DKK</span>
                     `;
                     cartItemsContainer.appendChild(itemDiv);
-                    total += item.price;
+                    total += item.price * item.quantity;
+                    totalItems += item.quantity;
                 });
             } else {
                 emptyMessage.style.display = 'block';
             }
 
             cartTotalSpan.textContent = total.toFixed(2);
-            cartCountSpan.textContent = cart.length;
+            cartCountSpan.textContent = totalItems;
         }
 
         function beginCheckout() {
@@ -223,7 +245,7 @@
                         'item_name': item.name,
                         'item_category': item.category,
                         'price': item.price,
-                        'quantity': 1
+                        'quantity': item.quantity
                     }))
                 }
             });
@@ -245,7 +267,7 @@
                         'item_name': item.name,
                         'item_category': item.category,
                         'price': item.price,
-                        'quantity': 1
+                        'quantity': item.quantity
                     }))
                 }
             });
